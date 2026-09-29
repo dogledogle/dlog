@@ -1,0 +1,19 @@
+<!-- dlog favicon：黑格底上的白色大写 D。
+     黑色圆角方块（#18181b，与控制台彩蛋同色）被深灰格线（#3f3f46）分成 4×4 个
+     方格子，中间是几何绘制的白色粗壮 D（平顶 + 右半圆，字腔用 evenodd 挖空）。
+     格线用深灰实线而非镂空缝隙，D 压在格线上不会被标签栏底色打断。
+     改完设计记得跑 node scripts/generate-favicon.mjs
+     重新生成 favicon.ico 与 apple-icon.png。 -->
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="24" fill="#18181b"/>
+  <!-- 4×4 方格的分隔线 -->
+  <rect x="23.75" y="0" width="2.5" height="100" fill="#3f3f46"/>
+  <rect x="48.75" y="0" width="2.5" height="100" fill="#3f3f46"/>
+  <rect x="73.75" y="0" width="2.5" height="100" fill="#3f3f46"/>
+  <rect x="0" y="23.75" width="100" height="2.5" fill="#3f3f46"/>
+  <rect x="0" y="48.75" width="100" height="2.5" fill="#3f3f46"/>
+  <rect x="0" y="73.75" width="100" height="2.5" fill="#3f3f46"/>
+  <!-- 白色大写 D -->
+  <path d="M23,20 H47 A30,30 0 0 1 47,80 H23 Z M38,35 H47 A15,15 0 0 1 47,65 H38 Z"
+    fill="#ffffff" fill-rule="evenodd"/>
+</svg>

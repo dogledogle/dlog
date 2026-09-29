@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# dlog
 
-## Getting Started
+多格放在互联网上的小站：写文章、记随笔、存笔记、放诗，还有一间实验室，专收小玩意。
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```console
+$ whoami
+多格 · 前端开发者
+$ ls
+文章/ 随笔/ 笔记/ 诗/ 小玩意/
+$ dlog --status
+online · 欢迎常来
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 里面有什么
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **文章** —— 认真写的长文
+- **随笔** —— 即时的想法和生活片段
+- **笔记** —— 碎片化的知识卡片
+- **诗** —— 笔记本上的手抄，一行一句
+- **实验室** —— 开源作品与小工具
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 怎么搭的
 
-## Learn More
+Next.js 16 + Velite + Tailwind CSS v4。所有内容都是仓库里的 Markdown，push 即发布——没有后台，没有数据库，仓库即站点。
 
-To learn more about Next.js, take a look at the following resources:
+首页开场是一段会打字的终端；哪个分区空了，就有一只手绘打盹猫出来值班。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 本地跑起来
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm install
+npm run dev     # 打开 http://localhost:3000
+```

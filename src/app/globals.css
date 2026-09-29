@@ -1,26 +1,736 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design Tokens —— shadcn/ui 默认的 zinc 中性色系（OKLCH）。
+ * 换整套主题（换肤）：覆盖下面两组变量即可；
+ * tweakcn 等 shadcn 主题变量集可直接粘贴到这里。
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --primary: oklch(0.21 0.006 285.885);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.705 0.015 286.067);
+  /* 诗集时间轴流光：浅色下调淡避免黑带过重，深色用原浓度 */
+  --timeline-glow: 65%;
+  --timeline-glow-shadow: 30%;
+}
+
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.92 0.004 286.32);
+  --primary-foreground: oklch(0.21 0.006 285.885);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.016 285.938);
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.552 0.016 285.938);
+  --timeline-glow: 80%;
+  --timeline-glow-shadow: 45%;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: var(--font-geist-sans), "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular",
+    "Cascadia Mono", monospace;
+  /* 诗集正文用衬线，取各平台默认宋体 */
+  --font-serif: "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC",
+    SimSun, Georgia, ui-serif, serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: color-mix(in oklch, var(--foreground) 14%, transparent);
+}
+
+/*
+ * 全站动态背景：低对比点阵网格缓慢漂移 + 两团模糊光晕游移。
+ * 颜色由 --foreground 派生，明暗主题自动适配；
+ * 系统开启「减弱动态效果」时全部静止。
+ */
+.background-fx {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.background-fx::before {
+  content: "";
+  position: absolute;
+  inset: -120px;
+  background-image: radial-gradient(
+    color-mix(in oklch, var(--foreground) 15%, transparent) 1.3px,
+    transparent 1.3px
+  );
+  background-size: 26px 26px;
+  animation: fx-grid-drift 120s ease-in-out infinite alternate;
+}
+
+.background-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+}
+
+.background-blob-a {
+  top: -300px;
+  left: -180px;
+  width: 720px;
+  height: 520px;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklch, var(--foreground) 10%, transparent),
+    transparent
+  );
+  animation: fx-blob-a 52s ease-in-out infinite alternate;
+}
+
+.background-blob-b {
+  top: -200px;
+  right: -220px;
+  width: 640px;
+  height: 480px;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklch, var(--foreground) 8%, transparent),
+    transparent
+  );
+  animation: fx-blob-b 68s ease-in-out infinite alternate;
+}
+
+@keyframes fx-grid-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(26px, 26px, 0);
+  }
+}
+
+@keyframes fx-blob-a {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(110px, 60px, 0) scale(1.1);
+  }
+  100% {
+    transform: translate3d(-50px, 130px, 0) scale(0.94);
+  }
+}
+
+@keyframes fx-blob-b {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-90px, 80px, 0) scale(1.06);
+  }
+  100% {
+    transform: translate3d(60px, 150px, 0) scale(0.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .background-fx::before,
+  .background-blob {
+    animation: none;
+  }
+}
+
+/*
+ * 话题地铁图：线路用 pathLength=1 归一化长度后，以 dashoffset 1 -> 0
+ * 「画出来」，--line-delay 错开三条线；reduced-motion 下直接显示成图。
+ */
+.metro-line {
+  stroke-dasharray: 1;
+  animation: metro-draw 1s cubic-bezier(0.16, 1, 0.3, 1) var(--line-delay, 0ms)
+    both;
+}
+
+@keyframes metro-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metro-line {
+    animation: none;
+  }
+}
+
+/*
+ * 诗集时间轴：轴线由各年份 section 自画一段——从本年份圆点圆心连到
+ * 下一个圆点圆心，最后一个年份止于圆点、不再外延；圆点不透明且抬升
+ * 层级，恰好盖住轴端与扫过的流光。
+ * 流光为 140px 波长的亮带沿线下行；颜色由 --foreground/--border 派生，
+ * 明暗主题自动适配；系统开启「减弱动态效果」时只保留静止的竖线。
+ */
+.poem-timeline > section::before {
+  content: "";
+  position: absolute;
+  top: 10px; /* 圆点圆心：节点 top 4px + 半径 6px */
+  bottom: -74px; /* 跨过 space-y-16 的 64px 间隔，接到下一年份圆点圆心 */
+  left: 5px;
+  width: 2px;
+  border-radius: 9999px;
+  background: var(--border);
+}
+
+.poem-timeline > section::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  bottom: -74px;
+  left: 5px;
+  width: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in oklch, var(--foreground) var(--timeline-glow), transparent),
+    transparent
+  );
+  /* 固定 140px 一个光带波长，沿线重复；位移一个波长即无缝循环 */
+  background-size: 100% 140px;
+  background-repeat: repeat-y;
+  filter: drop-shadow(
+    0 0 6px
+      color-mix(in oklch, var(--foreground) var(--timeline-glow-shadow), transparent)
+  );
+  animation: timeline-flow 2.8s linear infinite;
+}
+
+/* 最后一个年份：轴线和流光都止于圆点 */
+.poem-timeline > section:last-child::before,
+.poem-timeline > section:last-child::after {
+  content: none;
+}
+
+@keyframes timeline-flow {
+  from {
+    background-position-y: 0;
+  }
+  to {
+    background-position-y: 140px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poem-timeline > section::after {
+    animation: none;
+    background: none;
+  }
+}
+
+/* 年份节点：不透明圆点盖住轴端，层级高于流光 */
+.poem-timeline-node {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: var(--background);
+  border: 2px solid
+    color-mix(in oklch, var(--foreground) 55%, transparent);
+}
+
+/*
+ * 空状态打盹猫：Zzz 逐个上浮消散，猫身沿地面轻微呼吸；
+ * 系统开启「减弱动态效果」时全部静止，Zzz 保持可见。
+ */
+.empty-zzz {
+  animation: empty-zzz 2.7s ease-in-out infinite;
+}
+
+@keyframes empty-zzz {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  30% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.empty-cat {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: empty-cat-breathe 3.6s ease-in-out infinite;
+}
+
+@keyframes empty-cat-breathe {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.025);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .empty-zzz,
+  .empty-cat {
+    animation: none;
+  }
+}
+
+/*
+ * 终端 ASCII 头像：字符（色块 tspan）在各自的伪随机延迟后从无到有淡入，
+ * 整幅画面像「显影」一样散点浮现、直至完整；延迟 --d 由组件按网格坐标
+ * 散列内联传入，服务端与客户端算得一致，不产生 hydration 抖动。
+ * 系统开启「减弱动态效果」时直接显示成图。
+ */
+.ascii-avatar-row tspan {
+  animation: avatar-char-in 0.45s ease-out var(--d, 0ms) both;
+}
+
+@keyframes avatar-char-in {
+  from {
+    fill-opacity: 0;
+  }
+  to {
+    fill-opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ascii-avatar-row tspan {
+    animation: none;
+  }
+}
+
+/*
+ * 「真名放大镜」（终端 whoami 里悬停「多格」浮出的那枚）：
+ * 入场时一道斜向反光从镜面上扫过；系统开启「减弱动态效果」时不播放。
+ */
+.lens-glint::after {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgb(255 255 255 / 55%) 50%,
+    transparent 60%
+  );
+  transform: translateX(-110%);
+  animation: lens-glint-sweep 0.7s ease-out 0.08s both;
+}
+
+@keyframes lens-glint-sweep {
+  to {
+    transform: translateX(110%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lens-glint::after {
+    content: none;
+  }
+}
+
+/*
+ * 七巧板导航动效：
+ * 拼装入场（.tangram-assemble）——形状层每块从 --enter 的位移/旋转滑回原位，
+ *   delay 由组件内联错峰，fill both 让未轮到的块先藏在 SVG 视口外；
+ * 闲置呼吸（.tangram-idle）——形状层沿 --nudge-* 松动一点、微回弹后归位；
+ * 文字层（.tangram-lockup / .tangram-idle-lockup）——不参与飞行与倾斜：
+ *   合成器会把动画中的组栅格化后逐帧重采样，文字会发虚（旋转时尤甚），
+ *   故入场改为在落点原地淡入（delay 对齐各块落位时刻），闲置只平移跟随。
+ * 加载演示（.tangram-demo）——页面加载即把整幅色块顺擦入方向冲刷一遍
+ *   （与拼装同时进行）：接力划入后到站不停、继续滑出直至完全离开板块，
+ *   末层 animationEnd 摘类（取消逻辑见 SectionTangram）。
+ * 位移里的 px 在 SVG 中等于 viewBox 用户单位；形状层的 transform-box/origin
+ * 取版块自身包围盒中心，旋转才绕自己转。系统开启「减弱动态效果」时全部静止。
+ */
+.tangram-assemble {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tangram-assemble 1.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes tangram-assemble {
+  from {
+    transform: var(--enter);
+  }
+}
+
+.tangram-idle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tangram-idle 0.9s cubic-bezier(0.45, 0, 0.55, 1) both;
+}
+
+/* 0% / 100% 缺省即取自然位置（恒等变换），只写松动与回弹两帧 */
+@keyframes tangram-idle {
+  40% {
+    transform: translate(var(--nudge-x), var(--nudge-y)) rotate(var(--tilt));
+  }
+  75% {
+    transform: translate(
+        calc(var(--nudge-x) * -0.25),
+        calc(var(--nudge-y) * -0.25)
+      )
+      rotate(calc(var(--tilt) * -0.35));
+  }
+}
+
+.tangram-lockup {
+  animation: tangram-lockup-in 0.35s ease-out both;
+}
+
+@keyframes tangram-lockup-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.tangram-idle-lockup {
+  animation: tangram-idle-lockup 0.9s cubic-bezier(0.45, 0, 0.55, 1) both;
+}
+
+@keyframes tangram-idle-lockup {
+  40% {
+    transform: translate(var(--nudge-x), var(--nudge-y));
+  }
+  75% {
+    transform: translate(
+      calc(var(--nudge-x) * -0.25),
+      calc(var(--nudge-y) * -0.25)
+    );
+  }
+}
+
+/*
+ * 点击涟漪（.tangram-ripple）：圆心即点击点、半径覆盖全块的圆自 0 扩散渐隐，
+ * 交由组件内版块自身的 clipPath 裁剪，不会越界到邻块；缩放绕自身包围盒中心
+ * （= 点击点）。结束态 opacity 0 由 fill both 保持，直到 onAnimationEnd 卸载；
+ * 减弱动效下由组件侧直接不渲染（若只禁动画会让圆静止停留）。
+ */
+.tangram-ripple {
+  transform-box: fill-box;
+  transform-origin: center;
+  pointer-events: none;
+  animation: tangram-ripple 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes tangram-ripple {
+  from {
+    transform: scale(0);
+    opacity: 0.3;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/*
+ * hover 擦入接力（.tangram-wipe-in-1/2/3）：三层同色色块（透明度 30% / 60% /
+ * 100% 渐深）两段式划入。前半程滑到版块半程：第 1 层起步即最快、逐层减速
+ * （cubic-bezier(0.25, 0.8, 0.9, 0.94)），第 2、3 层慢起加速划入
+ * （cubic-bezier(0.45, 0.1, 0.7, 0.82)），到站都保留约六成线速。随后的等待
+ * 不是静止 hold，而是 linear 匀速蠕行越过半程（-50% → -35%，全程无零速）；
+ * 蠕行结束接 cubic-bezier(0.4, 0.3, 0.6, 0.95) 顺着蠕行速度继续加速冲向
+ * 终点、末段轻收。三层靠 animation-delay 每次错开一程（180ms）接力——第 1
+ * 层到半程第 2 层出发，第 2 层到第 3 层出发，先到的块以慢速蠕行「等待」
+ * 后块。keyframes 内的分段 timing-function 只作用于其后一段。fill 用
+ * backwards：只让延迟期间停在起点帧；终点态交还下方规则的静态 transform
+ * 保持——若用 both，动画填充会一直遮着 transform，移出时 Chrome 不会从
+ * 被移除动画的填充值起 transition，色块会瞬间跳没而非滑出。总长 6 程 ×
+ * 180ms = 1.08s。
+ *
+ * 挂在 JS 维护的 .tangram-wipe-play 上而非 .group:hover：mouseleave 派发
+ * 时 :hover 已经失配，relay 动画在下一次样式重算就被摘除、中途位置无处
+ * 可读（Chrome 也不会从被摘动画的值起 transition），移出只能从终点硬跳。
+ * 换成 JS 类后，SectionTangram 的移出处理器里类还在、动画未死，此刻
+ * getComputedStyle 读到的正是各层当前的插值矩阵，写入内联 --wipe-out-from
+ * （划出 from 帧，见 .tangram-wipe-out）后类再让位给划出——色块从真实
+ * 当前位置滑出。静态 transform: translateX(0) 兼作原 group-hover 工具类
+ * 的终点态：relay 播完后由它兜住终点，移出抓位置时读到的是 0 而非静息位
+ * -101%。
+ */
+.tangram-wipe-play .tangram-wipe-in-1 {
+  transform: translateX(0);
+  animation: tangram-wipe-relay-lead 1.08s backwards;
+}
+
+.tangram-wipe-play .tangram-wipe-in-2 {
+  transform: translateX(0);
+  animation: tangram-wipe-relay-follow 1.08s 0.18s backwards;
+}
+
+.tangram-wipe-play .tangram-wipe-in-3 {
+  transform: translateX(0);
+  animation: tangram-wipe-relay-follow 1.08s 0.36s backwards;
+}
+
+/*
+ * 移出划出（.tangram-wipe-out-1/2/3，类由 SectionTangram 在移出后挂 700ms）：
+ * 移出不能走 transition——relay 动画摘除时 Chrome 不会从动画填充值起过渡
+ * （色块会瞬间跳没，实测 transitionrun 均不触发），改为三层各自播放 300ms
+ * 划出动画：按进站相反的顺序（深 → 中 → 浅）错峰 180ms 依次滑回 -101%。
+ * from 帧是各层自己的 --wipe-out-from——SectionTangram 在移出处理器里趁
+ * relay 尚未摘除读 getComputedStyle 写入的内联矩阵（机制见
+ * .tangram-wipe-play 注释），滑入中途移出即当前位置、滑入完成后即终点 0，
+ * 划出永远从真实当前位置出发；变量缺省回退 translateX(0)。backwards 让未
+ * 轮到的层在延迟期冻在各自当前位置，末帧即静息位、播完与摘类均零跳变。
+ * 移出期间再悬停同块时 play 规则更 specific、动画优先级更高，划出自动
+ * 让位。
+ */
+.tangram-wipe-out-1 {
+  animation: tangram-wipe-out 0.3s 0.36s backwards;
+}
+
+.tangram-wipe-out-2 {
+  animation: tangram-wipe-out 0.3s 0.18s backwards;
+}
+
+.tangram-wipe-out-3 {
+  animation: tangram-wipe-out 0.3s backwards;
+}
+
+@keyframes tangram-wipe-out {
+  from {
+    transform: var(--wipe-out-from, translateX(0));
+  }
+  to {
+    transform: translateX(-101%);
+  }
+}
+
+/*
+ * 加载演示（.tangram-demo，加载即起跑、取消逻辑见 SectionTangram）：
+ * 色块顺 hover 接力的同一轨道整幅冲刷一遍——前三段与 relay 逐帧一致地划入，
+ * 到站（66.7% 处 translateX(0)）不停，顺原方向继续滑出板块：0 → 101% 用
+ * 0.36s 平滑减速冲完，出界段由版块自身 clipPath 裁掉，直至完全离开；
+ * 末帧用 steps(1) 在界外零可见过渡地折返 -101%（＝静息位，+101% 与 -101%
+ * 都在 clipPath 外，跳变不可见），animationEnd 摘类时样式零变化，不会触发
+ * transition 把色块又扫回来。三层沿用 180ms 错峰，全程 1.44s 无停顿；
+ * 悬停中途打断则 relay（.tangram-wipe-play）接管、自左重新擦入。
+ */
+.tangram-demo .tangram-wipe-in-1 {
+  animation: tangram-wipe-demo-lead 1.08s both;
+}
+
+.tangram-demo .tangram-wipe-in-2 {
+  animation: tangram-wipe-demo-follow 1.08s 0.18s both;
+}
+
+.tangram-demo .tangram-wipe-in-3 {
+  animation: tangram-wipe-demo-follow 1.08s 0.36s both;
+}
+
+@keyframes tangram-wipe-demo-lead {
+  0% {
+    transform: translateX(-101%);
+    animation-timing-function: cubic-bezier(0.25, 0.8, 0.9, 0.94);
+  }
+  16.7% {
+    transform: translateX(-50%);
+    animation-timing-function: linear;
+  }
+  50% {
+    transform: translateX(-35%);
+    animation-timing-function: cubic-bezier(0.4, 0.3, 0.6, 0.95);
+  }
+  66.7% {
+    transform: translateX(0);
+    animation-timing-function: cubic-bezier(0.3, 0.4, 0.5, 1);
+  }
+  99.9% {
+    transform: translateX(101%);
+    animation-timing-function: steps(1);
+  }
+  100% {
+    transform: translateX(-101%);
+  }
+}
+
+@keyframes tangram-wipe-demo-follow {
+  0% {
+    transform: translateX(-101%);
+    animation-timing-function: cubic-bezier(0.45, 0.1, 0.7, 0.82);
+  }
+  16.7% {
+    transform: translateX(-50%);
+    animation-timing-function: linear;
+  }
+  50% {
+    transform: translateX(-35%);
+    animation-timing-function: cubic-bezier(0.4, 0.3, 0.6, 0.95);
+  }
+  66.7% {
+    transform: translateX(0);
+    animation-timing-function: cubic-bezier(0.3, 0.4, 0.5, 1);
+  }
+  99.9% {
+    transform: translateX(101%);
+    animation-timing-function: steps(1);
+  }
+  100% {
+    transform: translateX(-101%);
+  }
+}
+
+@keyframes tangram-wipe-relay-lead {
+  0% {
+    transform: translateX(-101%);
+    animation-timing-function: cubic-bezier(0.25, 0.8, 0.9, 0.94);
+  }
+  16.7% {
+    transform: translateX(-50%);
+    animation-timing-function: linear;
+  }
+  50% {
+    transform: translateX(-35%);
+    animation-timing-function: cubic-bezier(0.4, 0.3, 0.6, 0.95);
+  }
+  66.7% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes tangram-wipe-relay-follow {
+  0% {
+    transform: translateX(-101%);
+    animation-timing-function: cubic-bezier(0.45, 0.1, 0.7, 0.82);
+  }
+  16.7% {
+    transform: translateX(-50%);
+    animation-timing-function: linear;
+  }
+  50% {
+    transform: translateX(-35%);
+    animation-timing-function: cubic-bezier(0.4, 0.3, 0.6, 0.95);
+  }
+  66.7% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tangram-assemble,
+  .tangram-idle,
+  .tangram-lockup,
+  .tangram-idle-lockup,
+  .tangram-wipe-play .tangram-wipe-in-1,
+  .tangram-wipe-play .tangram-wipe-in-2,
+  .tangram-wipe-play .tangram-wipe-in-3,
+  .tangram-wipe-out-1,
+  .tangram-wipe-out-2,
+  .tangram-wipe-out-3,
+  .tangram-demo .tangram-wipe-in-1,
+  .tangram-demo .tangram-wipe-in-2,
+  .tangram-demo .tangram-wipe-in-3 {
+    animation: none;
+  }
+}
+
+/*
+ * 文章正文排版（.mdx-body 作用域）。
+ * 100% 自写的中文排版：想调字距、行高、段距都在这里改。
+ */
+.mdx-body :not(pre) > code {
+  background: var(--muted);
+  border-radius: 0.375rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.875em;
+  font-weight: 500;
+}
+
+.mdx-body pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.mdx-body [data-rehype-pretty-code-figure] pre {
+  margin-block: 0;
+}
+
+.mdx-body figcaption {
+  margin-bottom: 0;
+  padding-block: 0.5rem 0.6rem;
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
 }
