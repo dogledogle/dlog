@@ -49,12 +49,12 @@ type Ripple = { href: string; x: number; y: number; r: number; key: number };
  */
 const PLAY_WIPE_DEMO = false;
 
-// 版块底色与墨色：浅色主题全块铺纯白、深色主题全铺纯黑。底色不用主题
-// token（token 不是纯黑 / 白），其上的图标 / 文字 / 涟漪也用 dark: 变体配
-// 纯色墨（浅色深墨、深色白墨），明暗主题下对比一致。hover 擦入的色块铺满
+// 版块底色与墨色：底色与终端窗口同用 card 主题色（浅色即纯白、深色是
+// token 的暗灰而非纯黑），其上的图标 / 文字 / 涟漪用 dark: 变体配纯色墨
+// （浅色深墨、深色白墨），明暗主题下对比一致。hover 擦入的色块铺满
 // 版块（五种擦入色都是亮色），图标与文字统一翻成 neutral-950，与底色无关。
 const pieceStyles = {
-  bg: "fill-white dark:fill-black",
+  bg: "fill-card",
   icon: "text-neutral-500 dark:text-neutral-400",
   ink: "fill-neutral-950 dark:fill-white",
   inkMuted: "fill-neutral-500 dark:fill-neutral-400",
@@ -129,8 +129,8 @@ const sections: Section[] = [
 
 // 七巧板导航：hover / 点击只在多边形内部生效（SVG 原生几何命中，无需手写数学）。
 // hover 变色是色块在版块内自左向右擦入（机制见 PieceLayers 注释）；每块擦入
-// 专属的鲜艳色（section.wipe），静息时每块铺同色底（浅色主题纯白、深色
-// 主题纯黑，见 pieceStyles），悬停时图标与文字同步翻成深色墨保证可读，
+// 专属的鲜艳色（section.wipe），静息时每块铺同色底（与终端窗口同为 card
+// 色，见 pieceStyles），悬停时图标与文字同步翻成深色墨保证可读，
 // 建设中块靠组内 opacity-60 自然降饱和以示未完成。每块描边与终端边框同色
 // （border-border）；通栏容器 rounded-xl + overflow-hidden 裁出与终端一致的
 // 四个圆角；小屏（<640px）退化为卡片列表。
@@ -147,9 +147,9 @@ const sections: Section[] = [
 // 糊掉（见 PieceMotion 注释）；形状与文字各自嵌套内层 g 挂闲置动画，移除
 // idle 类回退时不会把已播完的入场动画重新触发一遍。
 // 版块内部图层（ready / 建设中共用）：透明命中层（无视觉，只接事件）→
-// 底色（浅色主题纯白、深色主题纯黑，见 pieceStyles）→ 擦入色块（同色三连
-// 块，透明度 30% / 60% / 100% 渐深）→ 描边。底色不用主题 token（要纯黑 /
-// 白），其上图标与文字也用 dark: 变体配纯色墨（浅色深墨、深色白墨）保证
+// 底色（与终端窗口同为 card 色，见 pieceStyles）→ 擦入色块（同色三连
+// 块，透明度 30% / 60% / 100% 渐深）→ 描边。其上图标与文字也用 dark: 变体
+// 配纯色墨（浅色深墨、深色白墨）保证
 // 明暗主题下都可读；色块默认 translateX(-101%) 藏于自身包围盒
 // 左侧（transform-box: fill-box 让百分比相对自身而非 viewBox）。hover 擦入
 // 是 globals.css 里 tangram-wipe-relay 的接力编排，挂在 JS 加的
@@ -190,7 +190,7 @@ function PieceLayers({
       {/* 透明命中层：接收 hover / 点击的实心层（fill-transparent 仍可命中，
           fill-none 则不行），本身无视觉 */}
       <polygon points={section.points} className="fill-transparent" />
-      {/* 版块底色：浅色主题纯白、深色主题纯黑，静息铺满版块；擦入色块、
+      {/* 版块底色：与终端窗口同用 card 色，静息铺满版块；擦入色块、
           涟漪都盖在其上，hover 后整块被擦入色覆盖 */}
       <polygon points={section.points} className={pieceStyles.bg} />
       <g clipPath={`url(#${clipId})`}>

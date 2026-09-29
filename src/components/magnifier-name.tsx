@@ -151,8 +151,9 @@ export function MagnifierName({
   const before = i >= 0 ? line.slice(0, i) : line;
   const after = i >= 0 ? line.slice(i + name.length) : "";
 
+  // 整行禁选：拖动玩放大镜时不该带出选区，且框选复制会把 sr-only 的真名一起带走
   return (
-    <span ref={lineRef} className={cn("inline-block", className)}>
+    <span ref={lineRef} className={cn("inline-block select-none", className)}>
       {before}
       <span
         onPointerEnter={activate}
