@@ -5,7 +5,7 @@ export const site = {
   // 命名约定：中文昵称用「多格」，英文用 dogle（不要用 duoge）
   author: "dogle",
   url: "https://example.com",
-  github: "https://github.com/dogledogle",
+  github: "https://github.com/dogledogle/dlog",
   // 文章页底部的第三方平台入口
   juejin: "https://juejin.cn/user/78820570563688",
   cnblogs: "https://www.cnblogs.com/duoge",
