@@ -655,14 +655,14 @@ export function SectionTangram() {
             <Link
               key={section.title}
               href={section.href}
-              className="block rounded-xl border bg-card p-5 shadow-sm transition-colors hover:border-accent/50"
+              className="block rounded-xl border border-border bg-card p-5 shadow-md transition-colors hover:border-accent/50"
             >
               {card}
             </Link>
           ) : (
             <div
               key={section.title}
-              className="rounded-xl border border-dashed bg-card p-5 opacity-70"
+              className="rounded-xl border border-dashed border-border bg-card p-5 opacity-70"
             >
               {card}
             </div>
