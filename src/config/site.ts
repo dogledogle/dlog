@@ -1,10 +1,9 @@
 // 全站唯一配置入口：改这里即可更新站名、描述、导航等。
-// TODO: 上线前把 url 换成你自己的域名。
 export const site = {
   name: "dlog",
   // 命名约定：中文昵称用「多格」，英文用 dogle（不要用 duoge）
   author: "dogle",
-  url: "https://example.com",
+  url: "https://www.hidogle.top",
   github: "https://github.com/dogledogle/dlog",
   // 文章页底部的第三方平台入口
   juejin: "https://juejin.cn/user/78820570563688",
