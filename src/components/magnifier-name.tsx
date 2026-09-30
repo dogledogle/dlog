@@ -30,6 +30,8 @@ const LH = 24;
 const MAG = 2.2; // 放大倍率
 const LENS_D = 92; // 镜片直径
 const LENS_R = LENS_D / 2;
+// 触摸时镜心相对触点上抬的距离：半镜 46 + 指腹遮挡余量，让镜片底缘落在指尖上方
+const TOUCH_LIFT = 72;
 
 type Phase = "hidden" | "active" | "leaving";
 
@@ -38,6 +40,9 @@ type Phase = "hidden" | "active" | "leaving";
  * 指针的放大镜，镜片里是同一行文字的放大版，且 name 显形为 reveal。
  * - 镜体位置用 rAF + 指数平滑追赶指针，带一点水平速度带来的倾斜，
  *   跟手又有惯性感；portal 到 body，不被终端的 overflow 裁掉；
+ * - 触摸时手指会挡住镜心，镜体整体抬到指尖上方（内容焦点仍对准
+ *   触点，看到的还是指的那行字）；触摸点挪出「多格」或松手即退场，
+ *   name 区禁掉触摸滚动；
  * - 根元素 inline-block，让 getBoundingClientRect 拿到整行盒
  *   （inline 元素的高度不含半行距，对位会差半个行距）；
  * - 系统开启「减弱动态效果」时：不做追赶与倾斜、进出场无过渡。
@@ -65,6 +70,7 @@ export function MagnifierName({
   const target = useRef({ x: 0, y: 0 });
   const pos = useRef({ x: 0, y: 0 });
   const tilt = useRef(0);
+  const pointerType = useRef<"mouse" | "touch" | "pen">("mouse");
   const rect = useRef<DOMRect | null>(null);
 
   // 入场：挂载后隔两帧再展开，保证初始 scale-50 先被绘制、过渡能触发
@@ -96,7 +102,9 @@ export function MagnifierName({
     const tick = (t: number) => {
       const dt = Math.min(t - last, 64);
       last = t;
-      const ease = reduced ? 1 : 1 - Math.exp(-dt / 50);
+      const touch = pointerType.current === "touch";
+      // 触摸时收紧平滑（跟指即跟手，滞后会显得「漂」），桌面保留惯性感
+      const ease = reduced ? 1 : 1 - Math.exp(-dt / (touch ? 28 : 50));
       const prevX = pos.current.x;
       pos.current.x += (target.current.x - pos.current.x) * ease;
       pos.current.y += (target.current.y - pos.current.y) * ease;
@@ -107,8 +115,11 @@ export function MagnifierName({
 
       const { x, y } = pos.current;
       if (lensRef.current) {
+        // 触摸时镜体抬到指尖上方、钳在视口内；镜内焦点仍对准触点，
+        // 所以镜片里看到的仍是手指按住的那行字
+        const cy = touch ? Math.max(y - TOUCH_LIFT, LENS_R + 4) : y;
         lensRef.current.style.transform = `translate3d(${x - LENS_R}px, ${
-          y - LENS_R
+          cy - LENS_R
         }px, 0) rotate(${tilt.current.toFixed(3)}deg)`;
       }
       // 镜内放大层对位：把指针下的内容拉到镜心（纯平移，字号已是 MAG 倍）
@@ -138,7 +149,13 @@ export function MagnifierName({
     };
   }, [phase]);
 
+  const deactivate = () => {
+    setShown(false);
+    setPhase("leaving");
+  };
+
   const activate = (e: ReactPointerEvent<HTMLSpanElement>) => {
+    pointerType.current = e.pointerType;
     rect.current = lineRef.current?.getBoundingClientRect() ?? null;
     target.current = { x: e.clientX, y: e.clientY };
     pos.current = { x: e.clientX, y: e.clientY };
@@ -158,13 +175,28 @@ export function MagnifierName({
       <span
         onPointerEnter={activate}
         onPointerMove={(e) => {
+          pointerType.current = e.pointerType;
           target.current = { x: e.clientX, y: e.clientY };
+          // 触摸隐式捕获下挪出「多格」不会自然触发 pointerLeave，手动判定退场
+          if (e.pointerType === "touch") {
+            const r = e.currentTarget.getBoundingClientRect();
+            if (
+              e.clientX < r.left ||
+              e.clientX > r.right ||
+              e.clientY < r.top ||
+              e.clientY > r.bottom
+            ) {
+              deactivate();
+            }
+          }
         }}
-        onPointerLeave={() => {
-          setShown(false);
-          setPhase("leaving");
+        onPointerLeave={deactivate}
+        onPointerUp={(e) => {
+          // 触摸没有悬停态，松手即退场；鼠标点按不应打断 hover 中的放大镜
+          if (e.pointerType !== "mouse") deactivate();
         }}
-        className="hover:cursor-none"
+        onPointerCancel={deactivate}
+        className="touch-none hover:cursor-none"
       >
         {name}
       </span>
