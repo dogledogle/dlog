@@ -1,6 +1,7 @@
 "use client";
 
 import { RotateCcw } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AsciiAvatar } from "./ascii-avatar";
 import {
@@ -73,6 +74,7 @@ function StatusRow({ stat, runId }: { stat: StatusStat; runId: number }) {
 // 会逐行打字的终端（tmux 三窗格：左侧剧本，中间 ASCII 头像，右侧状态面板）。
 // 点右上角的重播按钮可以再来一遍；系统开启「减弱动态效果」时直接显示全部内容。
 export function TerminalIntro({ stats }: { stats: StatusStat[] }) {
+  const router = useRouter();
   const [current, setCurrent] = useState(-1);
   const [typed, setTyped] = useState(0);
   const [finished, setFinished] = useState(false);
@@ -156,7 +158,15 @@ export function TerminalIntro({ stats }: { stats: StatusStat[] }) {
                 {line.kind === "cmd" ? (
                   <>
                     <span className="mr-2 text-emerald-600 dark:text-emerald-400">$</span>
-                    <span className="text-foreground">{text}</span>
+                    {/* 彩蛋：双击 whoami 跳简历页，刻意不加任何可点击提示 */}
+                    <span
+                      className="text-foreground"
+                      onDoubleClick={
+                        line.text === "whoami" ? () => router.push("/resume") : undefined
+                      }
+                    >
+                      {text}
+                    </span>
                     {isTyping && cursor}
                   </>
                 ) : line.magnify ? (
