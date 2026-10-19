@@ -58,9 +58,63 @@ const notes = defineCollection({
   }),
 });
 
+// 简历：结构化内容全部放在 frontmatter（正文留空），/resume 页面负责渲染排版。
+const resume = defineCollection({
+  name: "resume",
+  pattern: "resume/**/*.md",
+  schema: s.object({
+    slug: s.slug("resume"),
+    name: s.string().max(40),
+    subtitle: s.string().max(99),
+    contacts: s.array(
+      s.object({
+        icon: s.enum(["user", "phone", "mail", "github"]),
+        text: s.string().max(99),
+      }),
+    ),
+    github: s.string(),
+    advantage: s.string(),
+    education: s.array(
+      s.object({
+        school: s.string().max(99),
+        degree: s.string().max(20),
+        major: s.string().max(99),
+        time: s.string().max(40),
+      }),
+    ),
+    skills: s.array(s.string()),
+    work: s.array(
+      s.object({
+        company: s.string().max(99),
+        department: s.string().max(40),
+        time: s.string().max(40),
+        hidden: s.boolean().default(false),
+        duties: s.array(s.string()).default([]),
+        achievements: s.array(s.string()).default([]),
+      }),
+    ),
+    projects: s.array(
+      s.object({
+        name: s.string().max(99),
+        url: s.string().optional(),
+        time: s.string().max(40),
+        intro: s.string().optional(),
+        role: s.array(s.string()).default([]),
+        actions: s.array(s.string()).default([]),
+        results: s.array(s.string()).default([]),
+      }),
+    ),
+    certificates: s.array(s.string()).default([]),
+    socials: s.array(
+      s.object({ name: s.string().max(40), url: s.string() }),
+    ).default([]),
+    thanks: s.string().optional(),
+  }),
+});
+
 export default defineConfig({
   root: "content",
-  collections: { posts, poems, essays, notes },
+  collections: { posts, poems, essays, notes, resume },
   mdx: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [
