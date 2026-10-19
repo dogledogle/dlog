@@ -98,9 +98,10 @@ body {
 }
 
 /*
- * 全站动态背景：低对比点阵网格缓慢漂移 + 两团模糊光晕游移。
- * 颜色由 --foreground 派生，明暗主题自动适配；
- * 系统开启「减弱动态效果」时全部静止。
+ * 全站动态背景：Canvas「明灭萤火」持续随机游移 + 两团模糊光晕游移。
+ * 萤火的绘制与动效由 background-fx.tsx（客户端组件）逐帧完成，
+ * 位置/大小/明灭峰值/方向/速度全部运行期随机；颜色取自 --foreground，
+ * 明暗主题自动适配；系统开启「减弱动态效果」时只画一帧静止微光。
  */
 .background-fx {
   position: fixed;
@@ -110,16 +111,11 @@ body {
   pointer-events: none;
 }
 
-.background-fx::before {
-  content: "";
+.background-fireflies {
   position: absolute;
-  inset: -120px;
-  background-image: radial-gradient(
-    color-mix(in oklch, var(--foreground) 15%, transparent) 1.3px,
-    transparent 1.3px
-  );
-  background-size: 26px 26px;
-  animation: fx-grid-drift 120s ease-in-out infinite alternate;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .background-blob {
@@ -154,15 +150,6 @@ body {
   animation: fx-blob-b 68s ease-in-out infinite alternate;
 }
 
-@keyframes fx-grid-drift {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(26px, 26px, 0);
-  }
-}
-
 @keyframes fx-blob-a {
   0% {
     transform: translate3d(0, 0, 0) scale(1);
@@ -187,8 +174,8 @@ body {
   }
 }
 
+/* 减弱动效：萤火由组件侧只画一帧静止微光，光晕静止 */
 @media (prefers-reduced-motion: reduce) {
-  .background-fx::before,
   .background-blob {
     animation: none;
   }
