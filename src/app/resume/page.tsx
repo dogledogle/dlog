@@ -3,6 +3,7 @@ import { Link2, Mail, Phone, UserRound } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 import { GithubIcon } from "@/components/icons";
 import { resume } from "#content";
+import { GithubHeatmap } from "./github-heatmap";
 
 export const metadata: Metadata = {
   title: { absolute: "刘东-前端开发简历" },
@@ -121,6 +122,11 @@ export default function ResumePage() {
         </header>
 
         <div className="mt-10 space-y-12">
+          <GithubHeatmap
+            username={r.github
+              .replace(/^https?:\/\/(www\.)?github\.com\//, "")
+              .replace(/\/$/, "")}
+          />
           <section>
             <SectionTitle>个人简介</SectionTitle>
             <p className="mt-3 text-[15px] leading-6 text-foreground/90">
