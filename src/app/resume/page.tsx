@@ -83,13 +83,27 @@ function EntryLink({ url }: { url: string }) {
   );
 }
 
+// 打印样式只随本页挂载：打印简历时隐藏简历主体之外的站点元素
+//（页脚、返回顶部按钮、背景萤火层；站点页头组件自带 print:hidden）。
+const printCss = `
+@media print {
+  .background-fx,
+  footer,
+  button[aria-label="返回顶部"] {
+    display: none !important;
+  }
+}
+`;
+
 export default function ResumePage() {
   const r = resume[0];
 
   return (
-    // 纸张式布局：版心与页头同宽（max-w-4xl px-6，正文 848px），纯色背景盖住底纹，无圆角/边框/内间距。
-    // 打印时去掉横向内边距，内容铺满 A4 可打印区，仅留浏览器页边距。
-    <div className="mx-auto w-full max-w-4xl px-6 py-12 print:px-0">
+    <>
+      <style>{printCss}</style>
+      {/* 纸张式布局：版心与页头同宽（max-w-4xl px-6，正文 848px），纯色背景盖住底纹，无圆角/边框/内间距。 */}
+      {/* 打印时去掉页面内边距，内容铺满 A4 可打印区，仅留浏览器页边距（底部内边距不归零会多打一张空白页）。 */}
+      <div className="mx-auto w-full max-w-4xl px-6 py-12 print:px-0 print:py-0">
       <div className="bg-background">
         {/* 头部：姓名 / 一句话定位 / 联系方式 */}
         <header className="flex flex-col items-center gap-2 text-center">
@@ -122,11 +136,14 @@ export default function ResumePage() {
         </header>
 
         <div className="mt-10 space-y-12">
-          <GithubHeatmap
-            username={r.github
-              .replace(/^https?:\/\/(www\.)?github\.com\//, "")
-              .replace(/\/$/, "")}
-          />
+          {/* 热力图是屏幕端展示，打印时隐藏。 */}
+          <div className="print:hidden">
+            <GithubHeatmap
+              username={r.github
+                .replace(/^https?:\/\/(www\.)?github\.com\//, "")
+                .replace(/\/$/, "")}
+            />
+          </div>
           <section>
             <SectionTitle>个人简介</SectionTitle>
             <p className="mt-3 text-[15px] leading-6 text-foreground/90">
@@ -264,6 +281,7 @@ export default function ResumePage() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
